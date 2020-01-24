@@ -123,6 +123,27 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                     onFocus: e => {
                       openMenu();
                     },
+                    onKeyUp: e => {
+                      const { key } = e;
+                      const { items, activeId } = query;
+
+                      if (key !== "Backspace") return;
+
+                      if (activeId && inputValue === "") {
+                        dispatchQuery(removeItem(activeId));
+                      }
+
+                      if (items.length > 0 && !activeId) {
+                        e.preventDefault();
+
+                        // TODO - build this out to be shared by inputs between chips
+                        const { id, value } = items[items.length - 1];
+
+                        dispatchQuery(setActiveId(id));
+
+                        setState({ inputValue: value });
+                      }
+                    },
                     onKeyDown: e => {
                       const { key } = e;
                       const { items, activeId } = query;
@@ -137,19 +158,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                         e.preventDefault();
                         dispatchQuery(updateItem(inputValue));
                         clearSelection();
-                      }
-
-                      if (key !== "Backspace" || inputValue) return;
-
-                      if (query.items.length > 0) {
-                        e.preventDefault();
-
-                        // TODO - build this out to be shared by inputs between chips
-                        const { id, value } = items[items.length - 1];
-
-                        dispatchQuery(setActiveId(id));
-
-                        setState({ inputValue: value });
                       }
                     }
                   })}
