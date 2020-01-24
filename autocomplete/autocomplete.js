@@ -144,8 +144,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                       if (query.items.length > 0) {
                         e.preventDefault();
 
-                        console.log("??")
-
                         // TODO - build this out to be shared by inputs between chips
                         const { id, value } = items[items.length - 1];
 
