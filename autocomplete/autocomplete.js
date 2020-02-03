@@ -75,8 +75,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     dispatchQuery(
       addItem({
         value,
-        type: type || "pharse",
-        id: uuid()
+        type: type || "pharse"
       })
     );
 
@@ -127,21 +126,38 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                       const { key } = e;
                       const { items, activeId } = query;
 
-                      if (key !== "Backspace") return;
+                      const isLogicMatch = logics.find(
+                        ({ value }) => value === inputValue
+                      );
 
-                      if (activeId && inputValue === "") {
-                        dispatchQuery(removeItem(activeId));
+                      if (isLogicMatch) {
+                        const {type, value} = isLogicMatch;
+
+                        dispatchQuery(
+                          addItem({
+                            value,
+                            type
+                          })
+                        );
+                        clearSelection();
+                        return;
                       }
 
-                      if (items.length > 0 && !activeId) {
-                        e.preventDefault();
+                      if (key === "Backspace") {
+                        if (activeId && inputValue === "") {
+                          dispatchQuery(removeItem(activeId));
+                        }
 
-                        // TODO - build this out to be shared by inputs between chips
-                        const { id, value } = items[items.length - 1];
+                        if (items.length > 0 && !activeId) {
+                          e.preventDefault();
 
-                        dispatchQuery(setActiveId(id));
+                          // TODO - build this out to be shared by inputs between chips
+                          const { id, value } = items[items.length - 1];
 
-                        setState({ inputValue: value });
+                          dispatchQuery(setActiveId(id));
+
+                          setState({ inputValue: value });
+                        }
                       }
                     },
                     onKeyDown: e => {
