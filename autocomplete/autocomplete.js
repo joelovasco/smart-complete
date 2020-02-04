@@ -42,7 +42,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const aggregateSuggestions = [...logics, ...suggestions];
 
   suggestions = aggregateSuggestions;
-  console.log("suggestions", suggestions);
+  // console.log("suggestions", suggestions);
 
   // event fired when the input value is changed
   const onUserInputChange = e => {
@@ -59,9 +59,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     setUserInput(e.currentTarget.value);
   };
 
-  // const handleOnChange = (e, stateAndHelpers) =>
-  //   console.log("change", e, stateAndHelpers);
-
   // Handles adding query items
   const handleOnSelect = (e, { clearSelection }) => {
     if (!e) return;
@@ -75,7 +72,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     dispatchQuery(
       addItem({
         value,
-        type: type || "pharse"
+        type: type || "phrase"
       })
     );
 
@@ -84,6 +81,57 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
   const itemToString = item => {
     return item ? item.value : "";
+  };
+
+  const onBackspaceKeyUp = (e, { inputValue, setState }) => {
+    const { items, activeId } = query;
+
+    if (activeId && inputValue === "") {
+      dispatchQuery(removeItem(activeId));
+    }
+
+    if (items.length > 0 && !activeId) {
+      e.preventDefault();
+
+      // TODO - build this out to be shared by inputs between chips
+      const { id, value } = items[items.length - 1];
+
+      dispatchQuery(setActiveId(id));
+
+      setState({ inputValue: value });
+    }
+  };
+
+  const onSpacebarKeyUp = (e, { inputValue, clearSelection }) => {
+    const logicMatch = logics.find(({ value }) => inputValue.includes(value));
+
+    if (logicMatch) {
+      // trim input, split phrase from logic op.
+      let inputPhrase = inputValue.trimEnd().split(logicMatch.value);
+
+      // cleanup split
+      inputPhrase = inputPhrase.slice(0, inputPhrase.length - 1);
+
+      // Dispatch phrase to chip
+      inputPhrase.forEach(phrase => {
+        dispatchQuery(
+          addItem({
+            value: phrase.trim(),
+            type: "phrase"
+          })
+        );
+      });
+
+      // Dispatch logic op to chip
+      dispatchQuery(
+        addItem({
+          value: logicMatch.value,
+          type: logicMatch.type
+        })
+      );
+
+      clearSelection();
+    }
   };
 
   return (
@@ -123,41 +171,13 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                       openMenu();
                     },
                     onKeyUp: e => {
-                      const { key } = e;
-                      const { items, activeId } = query;
-
-                      const isLogicMatch = logics.find(
-                        ({ value }) => value === inputValue
-                      );
-
-                      if (isLogicMatch) {
-                        const {type, value} = isLogicMatch;
-
-                        dispatchQuery(
-                          addItem({
-                            value,
-                            type
-                          })
-                        );
-                        clearSelection();
-                        return;
-                      }
-
-                      if (key === "Backspace") {
-                        if (activeId && inputValue === "") {
-                          dispatchQuery(removeItem(activeId));
-                        }
-
-                        if (items.length > 0 && !activeId) {
-                          e.preventDefault();
-
-                          // TODO - build this out to be shared by inputs between chips
-                          const { id, value } = items[items.length - 1];
-
-                          dispatchQuery(setActiveId(id));
-
-                          setState({ inputValue: value });
-                        }
+                      switch (e.key) {
+                        case " ":
+                          onSpacebarKeyUp(e, { inputValue, clearSelection });
+                          return;
+                        case "Backspace":
+                          onBackspaceKeyUp(e, { inputValue, setState });
+                          return;
                       }
                     },
                     onKeyDown: e => {
