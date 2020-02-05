@@ -83,14 +83,23 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     return item ? item.value : "";
   };
 
+  /**
+   * On delete
+   * 
+   * @param {Event}
+   * @param {Object} Downshift's stateAndHelpers
+   */
   const onBackspaceKeyUp = (e, { inputValue, setState }) => {
     const { items, activeId } = query;
+    const hasChips = items.length > 0;
 
+    // If a user has deleted past a chip
+    // remove it from query.items
     if (activeId && inputValue === "") {
       dispatchQuery(removeItem(activeId));
     }
 
-    if (items.length > 0 && !activeId) {
+    if (hasChips && !activeId) {
       e.preventDefault();
 
       // TODO - build this out to be shared by inputs between chips
@@ -102,36 +111,53 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     }
   };
 
-  const onSpacebarKeyUp = (e, { inputValue, clearSelection }) => {
-    const logicMatch = logics.find(({ value }) => inputValue.includes(value));
+  /**
+   * Parses input string for logic operators
+   * and trys to return an array of matches.
+   * 
+   * @param {string} input
+   * @returns {null|string[]}
+   */
+  const parseInputForLogicOperator = (input, canStartWithLogic = false) => {
+    const startsWithLogicRegEx = /^(AND|OR|NOT)\s$/;
+    const inputHasLogicRegex = /^([^\s]*)\s(AND|OR|NOT)\s(.*)$/;
+    const re = canStartWithLogic ? startsWithLogicRegEx : inputHasLogicRegex;
 
-    if (logicMatch) {
-      // trim input, split phrase from logic op.
-      let inputPhrase = inputValue.trimEnd().split(logicMatch.value);
+    if (!re.test(input)) return null;
 
-      // cleanup split
-      inputPhrase = inputPhrase.slice(0, inputPhrase.length - 1);
+    let matches = input.match(re);
+    return matches.slice(1);
+  };
 
-      // Dispatch phrase to chip
-      inputPhrase.forEach(phrase => {
-        dispatchQuery(
-          addItem({
-            value: phrase.trim(),
-            type: "phrase"
-          })
-        );
-      });
+  /**
+   * Determines if input should be chipped.
+   * 
+   * @param {Event}
+   * @param {Object} Downshift's stateAndHelpers
+   */
+  const chipInput = (e, { inputValue, clearSelection }) => {
+    const { items } = query;
+    const hasChips = items.length > 0;
 
-      // Dispatch logic op to chip
+    const inputsToDispatch = parseInputForLogicOperator(inputValue, hasChips);
+
+    if (!inputsToDispatch) return;
+
+    inputsToDispatch.forEach(input => {
+      if(!input) return;
+
+      // TODO - build out for "field" type
+      const isLogic = ["AND", "OR", "NOT"].indexOf(input) !== -1;
+
       dispatchQuery(
         addItem({
-          value: logicMatch.value,
-          type: logicMatch.type
+          value: input,
+          type: isLogic ? "logic" : "phrase"
         })
       );
+    });
 
-      clearSelection();
-    }
+    clearSelection();
   };
 
   return (
@@ -172,11 +198,11 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                     },
                     onKeyUp: e => {
                       switch (e.key) {
-                        case " ":
-                          onSpacebarKeyUp(e, { inputValue, clearSelection });
-                          return;
                         case "Backspace":
                           onBackspaceKeyUp(e, { inputValue, setState });
+                          return;
+                        default:
+                          chipInput(e, { inputValue, clearSelection });
                           return;
                       }
                     },
