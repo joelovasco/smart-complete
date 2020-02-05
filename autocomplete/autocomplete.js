@@ -42,7 +42,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const aggregateSuggestions = [...logics, ...suggestions];
 
   suggestions = aggregateSuggestions;
-  console.log("suggestions", suggestions);
+  // console.log("suggestions", suggestions);
 
   // event fired when the input value is changed
   const onUserInputChange = e => {
@@ -59,9 +59,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     setUserInput(e.currentTarget.value);
   };
 
-  // const handleOnChange = (e, stateAndHelpers) =>
-  //   console.log("change", e, stateAndHelpers);
-
   // Handles adding query items
   const handleOnSelect = (e, { clearSelection }) => {
     if (!e) return;
@@ -75,8 +72,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     dispatchQuery(
       addItem({
         value,
-        type: type || "pharse",
-        id: uuid()
+        type: type || "phrase"
       })
     );
 
@@ -85,6 +81,83 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
   const itemToString = item => {
     return item ? item.value : "";
+  };
+
+  /**
+   * On delete
+   * 
+   * @param {Event}
+   * @param {Object} Downshift's stateAndHelpers
+   */
+  const onBackspaceKeyUp = (e, { inputValue, setState }) => {
+    const { items, activeId } = query;
+    const hasChips = items.length > 0;
+
+    // If a user has deleted past a chip
+    // remove it from query.items
+    if (activeId && inputValue === "") {
+      dispatchQuery(removeItem(activeId));
+    }
+
+    if (hasChips && !activeId) {
+      e.preventDefault();
+
+      // TODO - build this out to be shared by inputs between chips
+      const { id, value } = items[items.length - 1];
+
+      dispatchQuery(setActiveId(id));
+
+      setState({ inputValue: value });
+    }
+  };
+
+  /**
+   * Parses input string for logic operators
+   * and trys to return an array of matches.
+   * 
+   * @param {string} input
+   * @returns {null|string[]}
+   */
+  const parseInputForLogicOperator = (input, canStartWithLogic = false) => {
+    const startsWithLogicRegEx = /^(AND|OR|NOT)\s$/;
+    const inputHasLogicRegex = /^([^\s]*)\s(AND|OR|NOT)\s(.*)$/;
+    const re = canStartWithLogic ? startsWithLogicRegEx : inputHasLogicRegex;
+
+    if (!re.test(input)) return null;
+
+    let matches = input.match(re);
+    return matches.slice(1);
+  };
+
+  /**
+   * Determines if input should be chipped.
+   * 
+   * @param {Event}
+   * @param {Object} Downshift's stateAndHelpers
+   */
+  const chipInput = (e, { inputValue, clearSelection }) => {
+    const { items } = query;
+    const hasChips = items.length > 0;
+
+    const inputsToDispatch = parseInputForLogicOperator(inputValue, hasChips);
+
+    if (!inputsToDispatch) return;
+
+    inputsToDispatch.forEach(input => {
+      if(!input) return;
+
+      // TODO - build out for "field" type
+      const isLogic = ["AND", "OR", "NOT"].indexOf(input) !== -1;
+
+      dispatchQuery(
+        addItem({
+          value: input,
+          type: isLogic ? "logic" : "phrase"
+        })
+      );
+    });
+
+    clearSelection();
   };
 
   return (
@@ -124,24 +197,13 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                       openMenu();
                     },
                     onKeyUp: e => {
-                      const { key } = e;
-                      const { items, activeId } = query;
-
-                      if (key !== "Backspace") return;
-
-                      if (activeId && inputValue === "") {
-                        dispatchQuery(removeItem(activeId));
-                      }
-
-                      if (items.length > 0 && !activeId) {
-                        e.preventDefault();
-
-                        // TODO - build this out to be shared by inputs between chips
-                        const { id, value } = items[items.length - 1];
-
-                        dispatchQuery(setActiveId(id));
-
-                        setState({ inputValue: value });
+                      switch (e.key) {
+                        case "Backspace":
+                          onBackspaceKeyUp(e, { inputValue, setState });
+                          return;
+                        default:
+                          chipInput(e, { inputValue, clearSelection });
+                          return;
                       }
                     },
                     onKeyDown: e => {

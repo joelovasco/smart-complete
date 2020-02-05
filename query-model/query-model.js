@@ -1,3 +1,5 @@
+import { v1 as uuid } from "uuid";
+
 const ADD_ITEM = "ADD_ITEM";
 const UPDATE_ITEM = "UPDATE_ITEM";
 const REMOVE_ITEM = "REMOVE_ITEM";
@@ -8,7 +10,7 @@ export default function queryReducer(state, action) {
     case ADD_ITEM:
       return {
         ...state,
-        items: [...state.items, action.payload]
+        items: [...state.items, { ...action.payload, id: uuid() }]
       };
     case UPDATE_ITEM:
       return {

@@ -38,7 +38,7 @@ export async function get(url = "") {
 }
 
 export function Data({ children }) {
-  console.log("Data");
+  //console.log("Data");
   const [data, setData] = useState(0);
 
   const state = {
@@ -50,11 +50,11 @@ export function Data({ children }) {
           const data = get(
             `https://jsonbox.io/box_a9a9da840b49dfdb575a?limit=1000&q=value:${input}*`
           ).then(data => {
-            console.log("GET: ", data);
+            //console.log("GET: ", data);
             setData(data);
           });
         } catch (e) {
-          console.log(e);
+          //console.log(e);
         }
       };
       initData();
