@@ -1,5 +1,5 @@
 {
-  "queryString": "recycling and waste management",
+  "queryString": "recycling AND waste management",
   "items": [
     {
       "model": [
@@ -16,7 +16,7 @@
           "value": "waste management"
         }
       ],
-      "value": "recycling and waste management"
+      "value": "recycling AND waste management"
     },
     {
       "model": [
@@ -34,7 +34,7 @@
           "code": "SU"
         }
       ],
-      "value": "recycling and waste management in subjects"
+      "value": "recycling AND waste management in subjects"
     },
     {
       "model": [
@@ -59,7 +59,7 @@
         "value": "waste minimisation"
         }
       ],
-      "value": "recycling and waste management OR waste minimisation"
+      "value": "recycling AND waste management OR waste minimisation"
     }
   ]
 }
