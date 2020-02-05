@@ -1,0 +1,65 @@
+{
+  "queryString": "recycling and waste management",
+  "items": [
+    {
+      "model": [
+        {
+          "type": "phrase",
+          "value": "recycling"
+        },
+        {
+          "type": "logic",
+          "value": "AND"
+        },
+        {
+          "type": "phrase",
+          "value": "waste management"
+        }
+      ],
+      "value": "recycling and waste management"
+    },
+    {
+      "model": [
+        {
+          "type": "phrase",
+          "value": "recycling"
+        },
+        {
+          "type": "logic",
+          "value": "AND"
+        },
+        {
+          "type": "field",
+          "value": "waste management",
+          "code": "SU"
+        }
+      ],
+      "value": "recycling and waste management in subjects"
+    },
+    {
+      "model": [
+        {
+          "type": "phrase",
+          "value": "recycling"
+        },
+        {
+          "type": "logic",
+          "value": "AND"
+        },
+        {
+          "type": "phrase",
+          "value": "waste management"
+        },
+        {
+          "type": "logic",
+          "value": "OR"
+        },
+        {
+        "type": "phrase",
+        "value": "waste minimisation"
+        }
+      ],
+      "value": "recycling and waste management OR waste minimisation"
+    }
+  ]
+}
