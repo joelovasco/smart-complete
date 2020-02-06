@@ -129,14 +129,14 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
     const logicRegEx = {
       // "boating AND "
-      [ENDS_WITH]: /^([^\s]*)\s(AND|OR|NOT)\s$/,
+      [ENDS_WITH]: /^[^"]([^\s]*)\s(AND|OR|NOT)\s$/,
       // "boating AND tourism"
-      [CONTAINS]: /^([^\s]*)\s(AND|OR|NOT)\s(.+)$/
+      [CONTAINS]: /^[^"]([^\s]*)\s(AND|OR|NOT)\s(.+)$/
     };
 
     if (canStartWithLogicOperator) {
       // "AND "
-      logicRegEx[STARTS_WITH] = /^(AND|OR|NOT)\s$/;
+      logicRegEx[STARTS_WITH] = /^[^"](AND|OR|NOT)\s$/;
     }
 
     const reKey = Object.keys(logicRegEx).find(key =>
