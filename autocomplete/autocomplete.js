@@ -29,7 +29,7 @@ const quotedTermCheck = input => {
   return inputValue !== "" && quoteCount > 1;
 };
 
-export default function Autocomplete({ suggestions, logics, onInputChange, fetchSuggestions }) {
+export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const [query, setQuery] = useState([]);
   const [userInput, setUserInput] = useState("");
   const [hasLogicOperator, setHasLogicOperator] = useState(false);
@@ -52,9 +52,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange, fetch
     // sanatize the user input and filtered suggestions, reset the active
     // suggestion and make sure the suggestions are shown
     let cleanUserInput = sanitizeInput(userInput);
-
-    fetchSuggestions(query.items);
-
 
     onInputChange(cleanUserInput);
     setActiveSuggestion(0);
