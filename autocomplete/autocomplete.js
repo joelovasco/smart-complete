@@ -32,6 +32,7 @@ const quotedTermCheck = input => {
 export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const [query, setQuery] = useState([]);
   const [userInput, setUserInput] = useState("");
+  const [hasLogicOperator, setHasLogicOperator] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeChipId, setActiveChipId] = useState(null);
@@ -85,7 +86,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
   /**
    * On delete
-   * 
+   *
    * @param {Event}
    * @param {Object} Downshift's stateAndHelpers
    */
@@ -114,24 +115,53 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   /**
    * Parses input string for logic operators
    * and trys to return an array of matches.
-   * 
+   *
    * @param {string} input
    * @returns {null|string[]}
    */
-  const parseInputForLogicOperator = (input, canStartWithLogic = false) => {
-    const startsWithLogicRegEx = /^(AND|OR|NOT)\s$/;
-    const inputHasLogicRegex = /^([^\s]*)\s(AND|OR|NOT)\s(.*)$/;
-    const re = canStartWithLogic ? startsWithLogicRegEx : inputHasLogicRegex;
+  const parseInputForLogicOperator = (
+    input,
+    canStartWithLogicOperator = false
+  ) => {
+    const STARTS_WITH = "STARTS_WITH";
+    const ENDS_WITH = "ENDS_WITH";
+    const CONTAINS = "CONTAINS";
 
-    if (!re.test(input)) return null;
+    const logicRegEx = {
+      // "boating AND "
+      [ENDS_WITH]: /^([^\s]*)\s(AND|OR|NOT)\s$/,
+      // "boating AND tourism"
+      [CONTAINS]: /^([^\s]*)\s(AND|OR|NOT)\s(.+)$/
+    };
 
-    let matches = input.match(re);
-    return matches.slice(1);
+    if (canStartWithLogicOperator) {
+      // "AND "
+      logicRegEx[STARTS_WITH] = /^(AND|OR|NOT)\s$/;
+    }
+
+    const reKey = Object.keys(logicRegEx).find(key =>
+      logicRegEx[key].test(input)
+    );
+
+    if (!reKey) return null;
+
+    // TODO - add a comment
+    if (reKey == CONTAINS && !hasLogicOperator) {
+      setHasLogicOperator(true);
+      return null;
+    }
+
+    if (hasLogicOperator) {
+      setHasLogicOperator(false);
+    }
+
+    const matches = input.match(logicRegEx[reKey]);
+    return matches ? matches.slice(1) : null;
   };
 
   /**
    * Determines if input should be chipped.
-   * 
+   *
    * @param {Event}
    * @param {Object} Downshift's stateAndHelpers
    */
@@ -140,11 +170,12 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     const hasChips = items.length > 0;
 
     const inputsToDispatch = parseInputForLogicOperator(inputValue, hasChips);
+    console.log("inputsToDispatch", inputsToDispatch)
 
     if (!inputsToDispatch) return;
 
     inputsToDispatch.forEach(input => {
-      if(!input) return;
+      if (!input) return;
 
       // TODO - build out for "field" type
       const isLogic = ["AND", "OR", "NOT"].indexOf(input) !== -1;
