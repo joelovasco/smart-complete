@@ -31,7 +31,6 @@ const App = () => (
                 }
               ]}
               onInputChange={context.cb}
-              fetchSuggestions={context.fetchSuggestions}
             />
           );
         }}
