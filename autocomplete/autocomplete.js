@@ -100,7 +100,8 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
       dispatchQuery(removeItem(activeId));
     }
 
-    if (hasChips && !activeId) {
+    // start chipping away at the existing chip 
+    if (hasChips && !activeId && !inputValue) {
       e.preventDefault();
 
       // TODO - build this out to be shared by inputs between chips
@@ -129,9 +130,9 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
     const logicRegEx = {
       // "boating AND "
-      [ENDS_WITH]: /^([^\s]*)\s(AND|OR|NOT)\s$/,
+      [ENDS_WITH]: /^([^"][^\s]*)\s(AND|OR|NOT)\s$/,
       // "boating AND tourism"
-      [CONTAINS]: /^([^\s]*)\s(AND|OR|NOT)\s(.+)$/
+      [CONTAINS]: /^([^"][^\s]*)\s(AND|OR|NOT)\s(.+)$/
     };
 
     if (canStartWithLogicOperator) {
@@ -164,6 +165,22 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   };
 
   /**
+   * Determines if input is pharsed.
+   * @param {string} input
+   *
+   * @returns {undefined|string[]}
+   */
+  const inputHasPhrase = input => {
+    // one or more of anything that is wrapped in quotes and
+    const phrasedInputRe = /^".+"$/;
+
+    if (!phrasedInputRe.test(input)) return;
+
+    const cleanedInput = input.replace(/"/g, "").trim();
+    return cleanedInput && [cleanedInput];
+  };
+
+  /**
    * Determines if input should be chipped.
    *
    * @param {Event}
@@ -173,8 +190,11 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     const { items } = query;
     const hasChips = items.length > 0;
 
-    const inputsToDispatch = parseInputForLogicOperator(inputValue, hasChips);
-    console.log("inputsToDispatch", inputsToDispatch)
+    const inputsToDispatch =
+      parseInputForLogicOperator(inputValue, hasChips) ||
+      inputHasPhrase(inputValue);
+   
+    console.log("inputsToDispatch", inputsToDispatch);
 
     if (!inputsToDispatch) return;
 
