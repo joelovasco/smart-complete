@@ -145,7 +145,11 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
     if (!reKey) return null;
 
-    // TODO - add a comment
+    // example string "boating or tourism"
+    // If a user wants to go back and replace or with OR~~.
+    // We should wait unitl the user has pressed another key to determine if
+    // a logic op is really what they are after.
+    // Maybe they want to enter "boating OREGON tourism"
     if (reKey == CONTAINS && !hasLogicOperator) {
       setHasLogicOperator(true);
       return null;
