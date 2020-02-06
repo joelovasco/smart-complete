@@ -146,7 +146,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     if (!reKey) return null;
 
     // example string "boating or tourism"
-    // If a user wants to go back and replace or with OR.
+    // If a user wants to go back and replace or with OR~~.
     // We should wait unitl the user has pressed another key to determine if
     // a logic op is really what they are after.
     // Maybe they want to enter "boating OREGON tourism"
