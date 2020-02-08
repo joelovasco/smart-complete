@@ -210,7 +210,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
       // shift contents of inputsToDispatch
       inputsToDispatch = inputsToDispatch.slice(1);
 
-console.log("???")
       dispatchQuery(
         updateItem({
           value: activeChipValue,
