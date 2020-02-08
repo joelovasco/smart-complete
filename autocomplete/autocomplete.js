@@ -210,12 +210,15 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
       // shift contents of inputsToDispatch
       inputsToDispatch = inputsToDispatch.slice(1);
 
+console.log("???")
       dispatchQuery(
         updateItem({
           value: activeChipValue,
           type: getModelItemType(activeChipValue)
         })
       );
+      // TODO - figure out why this is not resetting? 
+      // dispatchQuery(setActiveId(null));
     }
 
     inputsToDispatch.forEach(input => {
