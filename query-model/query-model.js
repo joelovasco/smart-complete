@@ -15,17 +15,6 @@ export default function queryReducer(state, action) {
         activeId: action.payload.activeId || id
       };
     case UPDATE_ITEM:
-    // {
-    //   "value": {
-    //     "value": [
-    //       "something"
-    //     ],
-    //     "type": "phrase"
-    //   },
-    //   "type": "text",
-    //   "id": "35e0fc50-4a8e-11ea-bc69-07f4a3ba28ab"
-    // },
-    console.log("payload", action.payload);
       return {
         ...state,
         items: state.items.map(item =>
