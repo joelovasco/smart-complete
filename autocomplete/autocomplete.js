@@ -216,7 +216,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
           type: getModelItemType(activeChipValue)
         })
       );
-      // TODO - reset should happen but addItem is overriding.
+      // TODO - reset should happen here but addItem is overriding.
       // see comment below.
       // dispatchQuery(setActiveId(null));
     }
@@ -345,7 +345,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
           </div>
         )}
       </Downshift>
-      <pre style={{ marginTOP: "50px" }}>{JSON.stringify(query, 0, 2)}</pre>
+      <pre>{JSON.stringify(query, 0, 2)}</pre>
     </>
   );
 }
