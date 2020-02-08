@@ -182,9 +182,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   };
 
   // TODO - build out for "field" type
-  const isLogic = input => ["AND", "OR", "NOT"].indexOf(input) !== -1;
-
-  // TODO - build out for "field" type
   const getModelItemType = input =>
     ["AND", "OR", "NOT"].indexOf(input) !== -1 ? "logic" : "phrase";
 
