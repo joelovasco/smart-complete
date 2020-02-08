@@ -216,13 +216,17 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
           type: getModelItemType(activeChipValue)
         })
       );
-      // TODO - figure out why this is not resetting? 
+      // TODO - reset should happen but addItem is overriding.
+      // see comment below.
       // dispatchQuery(setActiveId(null));
     }
 
     inputsToDispatch.forEach(input => {
       if (!input) return;
 
+      // addItem is resetting the activeId of every new item.
+      // consider reworking the payload to include
+      // { item: {value, type}, activeId: null }
       dispatchQuery(
         addItem({
           value: input,
