@@ -100,7 +100,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
       dispatchQuery(removeItem(activeId));
     }
 
-    // start chipping away at the existing chip 
+    // start chipping away at the existing chip
     if (hasChips && !activeId && !inputValue) {
       e.preventDefault();
 
@@ -108,6 +108,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
       const { id, value } = items[items.length - 1];
 
       dispatchQuery(setActiveId(id));
+      dispatchQuery(updateItem({ type: "text" }));
 
       setState({ inputValue: value });
     }
@@ -180,6 +181,13 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     return cleanedInput && [cleanedInput];
   };
 
+  // TODO - build out for "field" type
+  const isLogic = input => ["AND", "OR", "NOT"].indexOf(input) !== -1;
+
+  // TODO - build out for "field" type
+  const getModelItemType = input =>
+    ["AND", "OR", "NOT"].indexOf(input) !== -1 ? "logic" : "phrase";
+
   /**
    * Determines if input should be chipped.
    *
@@ -187,31 +195,44 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    * @param {Object} Downshift's stateAndHelpers
    */
   const chipInput = (e, { inputValue, clearSelection }) => {
-    const { items } = query;
+    const { items, activeId } = query;
     const hasChips = items.length > 0;
 
-    const inputsToDispatch =
+    let inputsToDispatch =
       parseInputForLogicOperator(inputValue, hasChips) ||
       inputHasPhrase(inputValue);
-   
+
     console.log("inputsToDispatch", inputsToDispatch);
 
     if (!inputsToDispatch) return;
 
+    // Update the active item
+    // Shift the contents of inputsToDispatch so that the newest items can be added to the model.
+    if (activeId) {
+      const activeChipValue = inputsToDispatch.slice(0, 1)[0];
+      // shift contents of inputsToDispatch
+      inputsToDispatch = inputsToDispatch.slice(1);
+
+      dispatchQuery(
+        updateItem({
+          value: activeChipValue,
+          type: getModelItemType(activeChipValue)
+        })
+      );
+    }
+
     inputsToDispatch.forEach(input => {
       if (!input) return;
-
-      // TODO - build out for "field" type
-      const isLogic = ["AND", "OR", "NOT"].indexOf(input) !== -1;
 
       dispatchQuery(
         addItem({
           value: input,
-          type: isLogic ? "logic" : "phrase"
+          type: getModelItemType(input)
         })
       );
     });
 
+    dispatchQuery(setActiveId(null));
     clearSelection();
   };
 
@@ -234,7 +255,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
               <div className="autocomplete__input">
                 {query.items.map(
                   ({ value, id, type }, index) =>
-                    id !== query.activeId ? (
+                    id !== query.activeId || type !== "text" ? (
                       <Chip
                         type={type}
                         index={index}
@@ -252,6 +273,21 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                       openMenu();
                     },
                     onKeyUp: e => {
+                      const { items, activeId } = query;
+
+                      if (!activeId && inputValue) {
+                        dispatchQuery(
+                          addItem({
+                            value: inputValue,
+                            type: "text"
+                          })
+                        );
+                      }
+
+                      if (activeId) {
+                        dispatchQuery(updateItem({ value: inputValue }));
+                      }
+
                       switch (e.key) {
                         case "Backspace":
                           onBackspaceKeyUp(e, { inputValue, setState });
@@ -265,15 +301,16 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                       const { key } = e;
                       const { items, activeId } = query;
 
-                      // key === ENTER
-                      // if chip is being edited
-
-                      // dispatch UPDATE_ITEM with new value.
-                      // reset editID once chip has been reminted.
-
+                      // remints active chip
                       if (key === "Enter" && activeId) {
                         e.preventDefault();
-                        dispatchQuery(updateItem(inputValue));
+                        dispatchQuery(
+                          updateItem({
+                            value: inputValue,
+                            type: getModelItemType(inputValue)
+                          })
+                        );
+                        dispatchQuery(setActiveId(null));
                         clearSelection();
                       }
                     }
@@ -305,7 +342,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
           </div>
         )}
       </Downshift>
-      <pre>{JSON.stringify(query, 0, 2)}</pre>
+      <pre style={{ marginTOP: "50px" }}>{JSON.stringify(query, 0, 2)}</pre>
     </>
   );
 }

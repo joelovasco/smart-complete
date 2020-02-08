@@ -8,17 +8,29 @@ const SET_ACTIVE_ID = "SET_ACTIVE_ID";
 export default function queryReducer(state, action) {
   switch (action.type) {
     case ADD_ITEM:
+      const id = uuid();
       return {
         ...state,
-        items: [...state.items, { ...action.payload, id: uuid() }]
+        items: [...state.items, { ...action.payload, id }],
+        activeId: action.payload.activeId || id
       };
     case UPDATE_ITEM:
+    // {
+    //   "value": {
+    //     "value": [
+    //       "something"
+    //     ],
+    //     "type": "phrase"
+    //   },
+    //   "type": "text",
+    //   "id": "35e0fc50-4a8e-11ea-bc69-07f4a3ba28ab"
+    // },
+    console.log("payload", action.payload);
       return {
         ...state,
         items: state.items.map(item =>
-          item.id === state.activeId ? { ...item, value: action.payload } : item
-        ),
-        activeId: null
+          item.id === state.activeId ? { ...item, ...action.payload } : item
+        )
       };
     case REMOVE_ITEM:
       return {
