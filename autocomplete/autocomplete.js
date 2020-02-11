@@ -177,11 +177,11 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    */
   const inputHasPhrase = input => {
     // one or more of anything that is wrapped in quotes and
-    const phrasedInputRe = /^".+"$/;
+    const phrasedInputRe = /^"(.+)"$/;
 
     if (!phrasedInputRe.test(input)) return;
 
-    const cleanedInput = input.replace(/"/g, "").trim();
+    const cleanedInput = input.match(phrasedInputRe)[1].trim();
     return cleanedInput && [cleanedInput];
   };
 
