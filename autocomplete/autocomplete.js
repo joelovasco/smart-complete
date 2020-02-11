@@ -209,7 +209,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     // Shift the contents of inputsToDispatch so that the newest items can be added to the model.
     if (activeId) {
       const activeItemValue = inputsToDispatch.slice(0, 1)[0];
-      // shift contents of inputsToDispatch
       inputsToDispatch = inputsToDispatch.slice(1);
 
       dispatchQuery(
