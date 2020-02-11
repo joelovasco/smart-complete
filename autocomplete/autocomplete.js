@@ -40,7 +40,11 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
   let cleanUserInput = sanitizeInput(userInput);
 
-  const aggregateSuggestions = [...logics, ...suggestions];
+  const parsedLogics = logics.filter(logic =>
+    logic.value.toLowerCase().includes(cleanUserInput)
+  );
+
+  const aggregateSuggestions = [...parsedLogics, ...suggestions];
 
   suggestions = aggregateSuggestions;
   // console.log("suggestions", suggestions);
@@ -49,7 +53,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const onUserInputChange = e => {
     const userInput = e.currentTarget.value;
 
-    // sanatize the user input and filtered suggestions, reset the active
+    // sanitize the user input and filtered suggestions, reset the active
     // suggestion and make sure the suggestions are shown
     let cleanUserInput = sanitizeInput(userInput);
 
@@ -100,7 +104,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
       dispatchQuery(removeItem(activeId));
     }
 
-    // start chipping away at the existing chip 
+    // start chipping away at the existing chip
     if (hasChips && !activeId && !inputValue) {
       e.preventDefault();
 
@@ -193,7 +197,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     const inputsToDispatch =
       parseInputForLogicOperator(inputValue, hasChips) ||
       inputHasPhrase(inputValue);
-   
+
     console.log("inputsToDispatch", inputsToDispatch);
 
     if (!inputsToDispatch) return;
