@@ -8,11 +8,9 @@ const SET_ACTIVE_ID = "SET_ACTIVE_ID";
 export default function queryReducer(state, action) {
   switch (action.type) {
     case ADD_ITEM:
-      const id = uuid();
       return {
         ...state,
-        items: [...state.items, { ...action.payload, id }],
-        activeId: action.payload.activeId || id
+        items: [...state.items, { ...action.payload, id: uuid() }]
       };
     case UPDATE_ITEM:
       return {
@@ -49,6 +47,21 @@ const addItem = payload => ({
   payload
 });
 
+const addActiveItem = payload => (dispatch, getState) => {
+  dispatch({
+    type: ADD_ITEM,
+    payload
+  });
+
+  const { items } = getState();
+  const addedItem = items.slice(items.length - 1);
+
+  dispatch({
+    type: SET_ACTIVE_ID,
+    id: addedItem[0].id
+  });
+};
+
 const updateItem = payload => ({
   type: UPDATE_ITEM,
   payload
@@ -64,4 +77,11 @@ const setActiveId = id => ({
   id
 });
 
-export { addItem, updateItem, removeItem, setActiveId, queryModel };
+export {
+  addItem,
+  addActiveItem,
+  updateItem,
+  removeItem,
+  setActiveId,
+  queryModel
+};

@@ -1,20 +1,23 @@
-import React, { Component, useState, useEffect, useReducer } from "react";
+import React, { Component, useState } from "react";
 import ReactDOM from "react-dom";
 import { v1 as uuid } from "uuid";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import Downshift from "downshift";
-import "./autocomplete.scss";
+import { useThunkReducer } from "react-hook-thunk-reducer";
 import Chip from "./chip";
 import { subjects } from "../data/subjects";
 import queryReducer, {
   addItem,
+  addActiveItem,
   updateItem,
   removeItem,
   setActiveId,
   queryModel
 } from "../query-model/query-model";
+
+import "./autocomplete.scss";
 
 library.add(faSearch, faTimes);
 
@@ -36,7 +39,8 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeChipId, setActiveChipId] = useState(null);
-  const [query, dispatchQuery] = useReducer(queryReducer, queryModel);
+  // const [query, dispatchQuery] = useReducer(queryReducer, queryModel);
+  const [query, dispatchQuery] = useThunkReducer(queryReducer, queryModel);
 
   let cleanUserInput = sanitizeInput(userInput);
 
@@ -199,34 +203,27 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
       parseInputForLogicOperator(inputValue, hasChips) ||
       inputHasPhrase(inputValue);
 
-    console.log("inputsToDispatch", inputsToDispatch);
-
     if (!inputsToDispatch) return;
 
     // Update the active item
     // Shift the contents of inputsToDispatch so that the newest items can be added to the model.
     if (activeId) {
-      const activeChipValue = inputsToDispatch.slice(0, 1)[0];
+      const activeItemValue = inputsToDispatch.slice(0, 1)[0];
       // shift contents of inputsToDispatch
       inputsToDispatch = inputsToDispatch.slice(1);
 
       dispatchQuery(
         updateItem({
-          value: activeChipValue,
-          type: getModelItemType(activeChipValue)
+          value: activeItemValue,
+          type: getModelItemType(activeItemValue)
         })
       );
-      // TODO - reset should happen here but addItem is overriding.
-      // see comment below.
-      // dispatchQuery(setActiveId(null));
+      dispatchQuery(setActiveId(null));
     }
 
     inputsToDispatch.forEach(input => {
       if (!input) return;
 
-      // addItem is resetting the activeId of every new item.
-      // consider reworking the payload to include
-      // { item: {value, type}, activeId: null }
       dispatchQuery(
         addItem({
           value: input,
@@ -235,7 +232,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
       );
     });
 
-    dispatchQuery(setActiveId(null));
     clearSelection();
   };
 
@@ -280,7 +276,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
                       if (!activeId && inputValue) {
                         dispatchQuery(
-                          addItem({
+                          addActiveItem({
                             value: inputValue,
                             type: "text"
                           })
