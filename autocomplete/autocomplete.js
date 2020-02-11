@@ -33,9 +33,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const [query, setQuery] = useState([]);
   const [userInput, setUserInput] = useState("");
   const [hasLogicOperator, setHasLogicOperator] = useState(false);
-  const [activeSuggestion, setActiveSuggestion] = useState(0);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [activeChipId, setActiveChipId] = useState(null);
   const [query, dispatchQuery] = useReducer(queryReducer, queryModel);
 
   let cleanUserInput = sanitizeInput(userInput);
@@ -56,7 +53,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     onInputChange(cleanUserInput);
     setActiveSuggestion(0);
 
-    if (cleanUserInput !== "") setShowSuggestions(true);
     setUserInput(e.currentTarget.value);
   };
 
@@ -100,7 +96,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
       dispatchQuery(removeItem(activeId));
     }
 
-    // start chipping away at the existing chip 
+    // start chipping away at the existing chip
     if (hasChips && !activeId && !inputValue) {
       e.preventDefault();
 
@@ -193,7 +189,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     const inputsToDispatch =
       parseInputForLogicOperator(inputValue, hasChips) ||
       inputHasPhrase(inputValue);
-   
+
     console.log("inputsToDispatch", inputsToDispatch);
 
     if (!inputsToDispatch) return;
