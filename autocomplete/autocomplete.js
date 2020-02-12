@@ -40,9 +40,9 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
   let cleanUserInput = sanitizeInput(userInput);
 
-  const parsedLogics = logics.filter(logic =>
-    logic.value.toLowerCase().includes(cleanUserInput)
-  );
+  const parsedLogics = cleanUserInput
+    ? logics.filter(logic => logic.value.toLowerCase().includes(cleanUserInput))
+    : [];
 
   const aggregateSuggestions = [...parsedLogics, ...suggestions];
 
