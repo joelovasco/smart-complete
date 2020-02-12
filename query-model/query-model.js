@@ -77,11 +77,16 @@ const setActiveId = id => ({
   id
 });
 
+// selectors
+
+const hasItems = (state) => state.items.length >= 1;
+
 export {
   addItem,
   addActiveItem,
   updateItem,
   removeItem,
   setActiveId,
-  queryModel
+  queryModel,
+  hasItems
 };

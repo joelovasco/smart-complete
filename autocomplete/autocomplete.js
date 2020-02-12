@@ -14,7 +14,8 @@ import queryReducer, {
   updateItem,
   removeItem,
   setActiveId,
-  queryModel
+  queryModel,
+  hasItems
 } from "../query-model/query-model";
 
 import "./autocomplete.scss";
@@ -119,26 +120,27 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    */
   const onBackspaceKeyUp = (e, { inputValue, setState }) => {
     const { items, activeId } = query;
-    const hasChips = items.length > 0;
 
-    // If a user has deleted past a chip
-    // remove it from query.items
-    if (activeId && inputValue === "") {
-      dispatchQuery(removeItem(activeId));
-    }
-
-    // start chipping away at the existing chip
-    if (hasChips && !activeId && !inputValue) {
+    if (!activeId && !inputValue) {
       e.preventDefault();
 
-      // TODO - build this out to be shared by inputs between chips
       const { id, value } = items[items.length - 1];
 
+      // start chipping away at the existing chip
+      // TODO - Combine with cursorIndex to determine where the in items set this is.
       dispatchQuery(setActiveId(id));
       dispatchQuery(updateItem({ type: "text" }));
 
       setState({ inputValue: value });
+      return;
     }
+
+    if (!inputValue) {
+      dispatchQuery(removeItem(activeId));
+      return;
+    }
+
+    dispatchQuery(updateItem({ value: inputValue }));
   };
 
   /**
@@ -218,56 +220,36 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    * @param {Event}
    * @param {Object} Downshift's stateAndHelpers
    */
-  const chipInput = (e, { inputValue, clearSelection }) => {
+  // const chipInput = (e, { inputValue, clearSelection }) => {
+  const chipInput = chips => {
     const { items, activeId } = query;
     const hasChips = items.length > 0;
 
-    if (!activeId && inputValue) {
-      dispatchQuery(
-        addActiveItem({
-          value: inputValue,
-          type: "text"
-        })
-      );
-      return;
-    }
+    // let inputsToDispatch =
+    //   parseInputForLogicOperator(inputValue, hasChips) ||
+    //   inputHasPhrase(inputValue);
 
-    if (activeId) {
-      dispatchQuery(updateItem({ value: inputValue }));
-    }
-
-    let inputsToDispatch =
-      parseInputForLogicOperator(inputValue, hasChips) ||
-      inputHasPhrase(inputValue);
-
-    if (!inputsToDispatch) return;
+    // if (!inputsToDispatch) return;
 
     const activeIndex = activeId
-      ? inputsToDispatch.findIndex(({ id }) => id === activeId)
+      ? items.findIndex(({ id }) => id === activeId)
       : null;
 
-    console.log("activeIndex", activeIndex)
+    chips.forEach((input, index) => {
+      const itemContents = {
+        value: input,
+        type: getModelItemType(input)
+      };
 
-    inputsToDispatch.forEach((input, index) => {
       if (index === activeIndex) {
-        dispatchQuery(
-          updateItem({
-            value: input,
-            type: getModelItemType(input)
-          })
-        );
+        dispatchQuery(updateItem(itemContents));
         dispatchQuery(setActiveId(null));
       } else {
-        dispatchQuery(
-          addItem({
-            value: input,
-            type: getModelItemType(input)
-          })
-        );
+        dispatchQuery(addItem(itemContents));
       }
     });
 
-    clearSelection();
+    //clearSelection();
   };
 
   const parseInput = () => {};
@@ -311,19 +293,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                     onKeyUp: e => {
                       const { items, activeId } = query;
 
-                      // if (!activeId && inputValue) {
-                      //   dispatchQuery(
-                      //     addActiveItem({
-                      //       value: inputValue,
-                      //       type: "text"
-                      //     })
-                      //   );
-                      // }
-
-                      // if (activeId) {
-                      //   dispatchQuery(updateItem({ value: inputValue }));
-                      // }
-
                       switch (e.key) {
                         case "Backspace":
                           onBackspaceKeyUp(e, { inputValue, setState });
@@ -341,7 +310,33 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                           onEnterKeyUp(e, { inputValue, clearSelection });
                           return;
                         default:
-                          chipInput(e, { inputValue, clearSelection });
+                          if (!activeId && inputValue) {
+                            dispatchQuery(
+                              addActiveItem({
+                                value: inputValue,
+                                type: "text"
+                              })
+                            );
+                            return;
+                          }
+
+                          const chipsToDispatch =
+                            parseInputForLogicOperator(
+                              inputValue,
+                              hasItems(query)
+                            ) || inputHasPhrase(inputValue);
+
+                          if (chipsToDispatch) {
+                            // chipInput(e, { inputValue, clearSelection });
+                            chipInput(chipsToDispatch);
+                            clearSelection()
+                            return;
+                          }
+
+                          if (activeId) {
+                            dispatchQuery(updateItem({ value: inputValue }));
+                          }
+
                           return;
                       }
                     }
