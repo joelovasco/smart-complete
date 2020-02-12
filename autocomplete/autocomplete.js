@@ -65,22 +65,22 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   };
 
   // Handles adding query items
+  // TODO - update to parse an array of items
   const handleOnSelect = (e, { clearSelection }) => {
     if (!e) return;
-
     const { value, type } = e;
+    const { activeId } = query;
 
-    // TODO - dispatch different actions based off of type
-    // if type === logic
-    // ADD_ITEM
-    // anything else reset query with auto complete suggestion array.
+    console.log("suggestion selected - ", e);
+
     dispatchQuery(
-      addItem({
+      updateItem({
         value,
-        type: type || "phrase"
+        type: getModelItemType(value)
       })
     );
 
+    dispatchQuery(setActiveId(null));
     clearSelection();
   };
 
@@ -290,6 +290,40 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                         case "Backspace":
                           onBackspaceKeyUp(e, { inputValue, setState });
                           return;
+                        case "Enter":
+                          // Item(s) was selected from the dropdown suggestions.
+                          // Let handleOnSelect take over.
+                          if (highlightedIndex || highlightedIndex === 0) {
+                            console.log(
+                              "has highlightedIndex",
+                              highlightedIndex
+                            );
+                            return;
+                          }
+
+                          e.nativeEvent.preventDownshiftDefault = true;
+
+                          // If more than one item and activeId
+                          // preventDefault
+                          // update active chip
+                          console.log("editing active item");
+                          if (items.length > 1 && activeId) {
+                            console.log("updating active item");
+                            e.preventDefault();
+                            dispatchQuery(
+                              updateItem({
+                                value: inputValue,
+                                type: getModelItemType(inputValue)
+                              })
+                            );
+                            dispatchQuery(setActiveId(null));
+                            clearSelection();
+                          }
+
+                          // Else run the search.
+                          // TODO - dispatch action?
+                          console.log("Running search for - ", inputValue);
+                          return;
                         default:
                           chipInput(e, { inputValue, clearSelection });
                           return;
@@ -298,19 +332,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                     onKeyDown: e => {
                       const { key } = e;
                       const { items, activeId } = query;
-
-                      // remints active chip
-                      if (key === "Enter" && activeId) {
-                        e.preventDefault();
-                        dispatchQuery(
-                          updateItem({
-                            value: inputValue,
-                            type: getModelItemType(inputValue)
-                          })
-                        );
-                        dispatchQuery(setActiveId(null));
-                        clearSelection();
-                      }
                     }
                   })}
                 />
