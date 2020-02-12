@@ -9,12 +9,8 @@ export default function Chip({ type, children, onDelete }) {
     <span className={`chip ${type}`}>
       <span className="chip__value">{children}</span>
       {type !== "logic" && (
-        <span className={`chip__delete`}>
-          <FontAwesomeIcon
-            icon="times"
-            className="delete-chip"
-            onClick={onDelete}
-          />
+        <span className="chip__delete">
+          <FontAwesomeIcon icon="times" onClick={onDelete} />
         </span>
       )}
     </span>
