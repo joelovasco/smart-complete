@@ -337,22 +337,39 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
               </div>
             </div>
             {isOpen && (
-              <ul class="suggestions" {...getMenuProps()}>
-                {suggestions.map((item, index) => (
-                  <li
-                    className={
-                      highlightedIndex === index ? "suggestion-active" : null
-                    }
-                    {...getItemProps({
-                      key: item._id || uuid(),
-                      index,
-                      item
-                    })}
-                  >
-                    {item.value}
-                  </li>
-                ))}
-              </ul>
+              <>
+                {query.items.length < 0 && (
+                  <ul class="suggestions">
+                    <li className="suggestionTip">
+                      <span>Search tip:</span> Add ‘<strong>AND</strong>’ to
+                      narrow your search, linking keyword concepts to return
+                      results that contain both and ‘<strong>OR</strong>’ to
+                      broaden your search, linking keywords to return results
+                      that contain either
+                    </li>
+                  </ul>
+                )}
+                {query.items.length > 0 && (
+                  <ul class="suggestions" {...getMenuProps()}>
+                    {suggestions.map((item, index) => (
+                      <li
+                        className={
+                          highlightedIndex === index
+                            ? "suggestion-active"
+                            : null
+                        }
+                        {...getItemProps({
+                          key: item._id || uuid(),
+                          index,
+                          item
+                        })}
+                      >
+                        {item.value}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
             )}
           </div>
         )}
