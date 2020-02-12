@@ -57,8 +57,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     let cleanUserInput = sanitizeInput(userInput);
 
     onInputChange(cleanUserInput);
-    setActiveSuggestion(0);
-
     setUserInput(e.currentTarget.value);
   };
 
