@@ -36,9 +36,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const [query, setQuery] = useState([]);
   const [userInput, setUserInput] = useState("");
   const [hasLogicOperator, setHasLogicOperator] = useState(false);
-  const [activeSuggestion, setActiveSuggestion] = useState(0);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [activeChipId, setActiveChipId] = useState(null);
   const [query, dispatchQuery] = useThunkReducer(queryReducer, queryModel);
 
 
@@ -51,7 +48,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const aggregateSuggestions = [...parsedLogics, ...suggestions];
 
   suggestions = aggregateSuggestions;
-  // console.log("suggestions", suggestions);
 
   // event fired when the input value is changed
   const onUserInputChange = e => {
