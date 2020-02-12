@@ -1,32 +1,46 @@
 .chip {
   margin: 0.5rem 0.2rem 0.5rem 0;
-  padding: 0.5rem 0.4rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 3px;
   line-height: 0;
   white-space: nowrap;
+  color: #3d3f42;
 
-  svg {
-    height: 0.8rem;
-    width: 0.8rem;
+  .chip__value {
+    background: #e7edf5;
+    flex: 1;
+    border-radius: 3px 0 0 3px;
   }
 
-  &.entry {
+  .chip__delete {
     background: #e7edf5;
-    color: #3d3f42;
+    flex: 1;
+    margin-left: 2px;
+    cursor: pointer;
+    height: 0;
+    border-radius: 0 3px 3px 0;
+
+    svg {
+      margin: -6px 0 0 0;
+      padding: 0;
+      height: 0.8rem;
+      width: 0.8rem;
+    }
+  }
+
+  .chip__value,
+  .chip__delete {
+    padding: 0.75rem 0.5rem;
+    max-height: 0.75rem;
   }
 
   &.logic {
-    background: #355a97;
-    color: #3d3f42;
-    color: #fff;
-    font-size: 0.7rem;
-  }
-
-  .delete-chip {
-    margin-left: 0.6rem;
-    cursor: pointer;
+    .chip__value {
+      font-size: 0.7rem;
+      color: #fff;
+      background: #355a97;
+      border-radius: 3px;
+    }
   }
 }

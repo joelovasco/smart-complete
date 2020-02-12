@@ -4,16 +4,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import "./chip.scss";
 
-export default function Chip({ type, index, children, onDelete }) {
+export default function Chip({ type, children, onDelete }) {
   return (
     <span className={`chip ${type}`}>
-      {children}
-      {type === "phrase" && (
-        <FontAwesomeIcon
-          icon="times"
-          className="delete-chip"
-          onClick={onDelete}
-        />
+      <span className="chip__value">{children}</span>
+      {type !== "logic" && (
+        <span className="chip__delete">
+          <FontAwesomeIcon icon="times" onClick={onDelete} />
+        </span>
       )}
     </span>
   );
