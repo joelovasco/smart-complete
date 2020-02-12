@@ -217,19 +217,12 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   /**
    * Determines if input should be chipped.
    *
-   * @param {Event}
-   * @param {Object} Downshift's stateAndHelpers
+   * @param {string[]} chips
+   * @returns {undefined}
    */
   // const chipInput = (e, { inputValue, clearSelection }) => {
   const chipInput = chips => {
     const { items, activeId } = query;
-    const hasChips = items.length > 0;
-
-    // let inputsToDispatch =
-    //   parseInputForLogicOperator(inputValue, hasChips) ||
-    //   inputHasPhrase(inputValue);
-
-    // if (!inputsToDispatch) return;
 
     const activeIndex = activeId
       ? items.findIndex(({ id }) => id === activeId)
@@ -243,16 +236,15 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
       if (index === activeIndex) {
         dispatchQuery(updateItem(itemContents));
-        dispatchQuery(setActiveId(null));
       } else {
         dispatchQuery(addItem(itemContents));
       }
     });
 
-    //clearSelection();
+    dispatchQuery(setActiveId(null));
   };
 
-  const parseInput = () => {};
+  // const parseInput = () => {};
 
   return (
     <>
@@ -310,6 +302,8 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                           onEnterKeyUp(e, { inputValue, clearSelection });
                           return;
                         default:
+
+                        // TODO - continue refactoring this into a parser. 
                           if (!activeId && inputValue) {
                             dispatchQuery(
                               addActiveItem({
