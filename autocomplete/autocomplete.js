@@ -84,6 +84,33 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     return item ? item.value : "";
   };
 
+  const onEnterKeyUp = (e, { inputValue, clearSection }) => {
+    e.nativeEvent.preventDownshiftDefault = true;
+    const { items } = query;
+
+    // If more than one item and activeId
+    // preventDefault
+    // update active chip
+    console.log("editing active item");
+    if (items.length > 1 && activeId) {
+      console.log("updating active item");
+      e.preventDefault();
+      dispatchQuery(
+        updateItem({
+          value: inputValue,
+          type: getModelItemType(inputValue)
+        })
+      );
+      dispatchQuery(setActiveId(null));
+      clearSelection();
+      return;
+    }
+
+    // Else run the search.
+    // TODO - dispatch action?
+    console.log("Running search for - ", items);
+  };
+
   /**
    * On delete
    *
@@ -195,40 +222,55 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     const { items, activeId } = query;
     const hasChips = items.length > 0;
 
+    if (!activeId && inputValue) {
+      dispatchQuery(
+        addActiveItem({
+          value: inputValue,
+          type: "text"
+        })
+      );
+      return;
+    }
+
+    if (activeId) {
+      dispatchQuery(updateItem({ value: inputValue }));
+    }
+
     let inputsToDispatch =
       parseInputForLogicOperator(inputValue, hasChips) ||
       inputHasPhrase(inputValue);
 
     if (!inputsToDispatch) return;
 
-    // Update the active item
-    // Shift the contents of inputsToDispatch so that the newest items can be added to the model.
-    if (activeId) {
-      const activeItemValue = inputsToDispatch.slice(0, 1)[0];
-      inputsToDispatch = inputsToDispatch.slice(1);
+    const activeIndex = activeId
+      ? inputsToDispatch.findIndex(({ id }) => id === activeId)
+      : null;
 
-      dispatchQuery(
-        updateItem({
-          value: activeItemValue,
-          type: getModelItemType(activeItemValue)
-        })
-      );
-      dispatchQuery(setActiveId(null));
-    }
+    console.log("activeIndex", activeIndex)
 
-    inputsToDispatch.forEach(input => {
-      if (!input) return;
-
-      dispatchQuery(
-        addItem({
-          value: input,
-          type: getModelItemType(input)
-        })
-      );
+    inputsToDispatch.forEach((input, index) => {
+      if (index === activeIndex) {
+        dispatchQuery(
+          updateItem({
+            value: input,
+            type: getModelItemType(input)
+          })
+        );
+        dispatchQuery(setActiveId(null));
+      } else {
+        dispatchQuery(
+          addItem({
+            value: input,
+            type: getModelItemType(input)
+          })
+        );
+      }
     });
 
     clearSelection();
   };
+
+  const parseInput = () => {};
 
   return (
     <>
@@ -269,18 +311,18 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                     onKeyUp: e => {
                       const { items, activeId } = query;
 
-                      if (!activeId && inputValue) {
-                        dispatchQuery(
-                          addActiveItem({
-                            value: inputValue,
-                            type: "text"
-                          })
-                        );
-                      }
+                      // if (!activeId && inputValue) {
+                      //   dispatchQuery(
+                      //     addActiveItem({
+                      //       value: inputValue,
+                      //       type: "text"
+                      //     })
+                      //   );
+                      // }
 
-                      if (activeId) {
-                        dispatchQuery(updateItem({ value: inputValue }));
-                      }
+                      // if (activeId) {
+                      //   dispatchQuery(updateItem({ value: inputValue }));
+                      // }
 
                       switch (e.key) {
                         case "Backspace":
@@ -296,38 +338,12 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                             );
                             return;
                           }
-
-                          e.nativeEvent.preventDownshiftDefault = true;
-
-                          // If more than one item and activeId
-                          // preventDefault
-                          // update active chip
-                          console.log("editing active item");
-                          if (items.length > 1 && activeId) {
-                            console.log("updating active item");
-                            e.preventDefault();
-                            dispatchQuery(
-                              updateItem({
-                                value: inputValue,
-                                type: getModelItemType(inputValue)
-                              })
-                            );
-                            dispatchQuery(setActiveId(null));
-                            clearSelection();
-                          }
-
-                          // Else run the search.
-                          // TODO - dispatch action?
-                          console.log("Running search for - ", inputValue);
+                          onEnterKeyUp(e, { inputValue, clearSelection });
                           return;
                         default:
                           chipInput(e, { inputValue, clearSelection });
                           return;
                       }
-                    },
-                    onKeyDown: e => {
-                      const { key } = e;
-                      const { items, activeId } = query;
                     }
                   })}
                 />
