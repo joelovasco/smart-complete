@@ -1,0 +1,32 @@
+.chip {
+  margin: 0.5rem 0.2rem 0.5rem 0;
+  padding: 0.5rem 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  line-height: 0;
+  white-space: nowrap;
+
+  svg {
+    height: 0.8rem;
+    width: 0.8rem;
+  }
+
+  &.entry {
+    background: #e7edf5;
+    color: #3d3f42;
+  }
+
+  &.logic {
+    background: #355a97;
+    color: #3d3f42;
+    color: #fff;
+    font-size: 0.7rem;
+  }
+
+  .delete-chip {
+    margin-left: 0.6rem;
+    cursor: pointer;
+  }
+}

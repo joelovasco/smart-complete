@@ -39,8 +39,8 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const [activeSuggestion, setActiveSuggestion] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeChipId, setActiveChipId] = useState(null);
-  // const [query, dispatchQuery] = useReducer(queryReducer, queryModel);
   const [query, dispatchQuery] = useThunkReducer(queryReducer, queryModel);
+
 
   let cleanUserInput = sanitizeInput(userInput);
 
@@ -64,7 +64,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     onInputChange(cleanUserInput);
     setActiveSuggestion(0);
 
-    if (cleanUserInput !== "") setShowSuggestions(true);
     setUserInput(e.currentTarget.value);
   };
 
