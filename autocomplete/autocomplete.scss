@@ -1,4 +1,9 @@
-html, body, h1, p, em, input {
+html,
+body,
+h1,
+p,
+em,
+input {
   font-family: sans-serif;
   font-weight: 100;
   font-size: 1rem;
@@ -8,17 +13,15 @@ input {
   border: 0;
   padding: 0;
   flex: 1;
-  box-sizing: border-box;
-  -webkit-box-sizing:border-box;
-  -moz-box-sizing: border-box;
   outline: none;
 }
 
 .autocomplete {
   position: relative;
+
   &__controls {
     display: flex;
-    
+    max-height: 2.75rem;
   }
 
   &__button {
@@ -31,17 +34,17 @@ input {
     svg {
       margin: 0;
       padding: 1rem;
-      color: #fff
+      color: #fff;
     }
   }
 
   &__input {
-    padding: 0.2rem 0.5rem;
     display: flex;
     width: 100%;
+    overflow: hidden;
     border: 1px solid rgb(188, 188, 188);
     border-radius: 3px 0 0 3px;
-    min-height:2em;
+    min-height: 1em;
   }
 }
 
@@ -65,18 +68,35 @@ input {
   background: #fff;
 
   &.logics {
-    border-bottom:none;
+    border-bottom: none;
+  }
+
+  .suggestionTip {
+    margin: 0.3rem;
+    font-size: 0.7em;
+    line-height: 1.6em;
+    color: #333;
+
+    span {
+      font-weight: bold;
+      font-style: oblique;
+    }
+
+    &:hover {
+      background: #fff;
+      cursor: default;
+    }
   }
 }
 
 .suggestions li {
   padding: 0.5rem;
-  -moz-user-select:none;
-  user-select:none;
+  -moz-user-select: none;
+  user-select: none;
   scroll-snap-align: start;
 
   &.subject::before {
-    content: 'SU';
+    content: "SU";
     padding: 5px 3px 3px 3px;
     font-size: 50%;
     border: 1px solid #666;
@@ -90,33 +110,6 @@ input {
   background: #b0c3db;
   color: #2f2f2f;
   cursor: pointer;
-}
-
-.chip {
-  margin-right: 0.2rem;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #355a97;
-  border-radius: 3px;
-  color: #fff;
-  white-space: nowrap;
-
-  svg {
-    height: 1rem;
-    width: 1rem;
-  }
-
-  &.entry {
-    background: #d8dade;
-    color: #3D3F42;
-  }
-
-  .delete-chip {
-    margin-left: 0.6rem;
-    cursor: pointer;
-  }
 }
 
 .search-icon {
