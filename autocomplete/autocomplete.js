@@ -38,7 +38,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const [hasLogicOperator, setHasLogicOperator] = useState(false);
   const [query, dispatchQuery] = useThunkReducer(queryReducer, queryModel);
 
-
   let cleanUserInput = sanitizeInput(userInput);
 
   const parsedLogics = logics.filter(logic =>
