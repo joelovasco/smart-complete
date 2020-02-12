@@ -44,7 +44,11 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
   let cleanUserInput = sanitizeInput(userInput);
 
-  const aggregateSuggestions = [...logics, ...suggestions];
+  const parsedLogics = logics.filter(logic =>
+    logic.value.toLowerCase().includes(cleanUserInput)
+  );
+
+  const aggregateSuggestions = [...parsedLogics, ...suggestions];
 
   suggestions = aggregateSuggestions;
   // console.log("suggestions", suggestions);
@@ -53,7 +57,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const onUserInputChange = e => {
     const userInput = e.currentTarget.value;
 
-    // sanatize the user input and filtered suggestions, reset the active
+    // sanitize the user input and filtered suggestions, reset the active
     // suggestion and make sure the suggestions are shown
     let cleanUserInput = sanitizeInput(userInput);
 
