@@ -88,10 +88,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     e.nativeEvent.preventDownshiftDefault = true;
     const { items, activeId } = query;
 
-    // If more than one item and activeId
-    // preventDefault
-    // update active chip
-    console.log("editing active item");
+    // If more than one item 
     if (items.length > 1) {
       console.log("updating active item");
       e.preventDefault();
