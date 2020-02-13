@@ -19,7 +19,6 @@ export default function queryReducer(state, action) {
       return {
         ...state,
         items: state.items.map((item, index) =>
-          //item.id === state.activeId ? { ...item, ...action.payload } : item
           index === state.cursorIndex ? { ...item, ...action.payload } : item
         )
       };

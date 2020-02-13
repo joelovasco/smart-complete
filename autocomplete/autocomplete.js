@@ -93,7 +93,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     // preventDefault
     // update active chip
     console.log("editing active item");
-    if (items.length > 1 && activeId) {
+    if (items.length > 1) {
       console.log("updating active item");
       e.preventDefault();
       dispatchQuery(
@@ -102,7 +102,8 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
           type: getModelItemType(inputValue)
         })
       );
-      dispatchQuery(setActiveId(null));
+      // advance cursor
+      dispatchQuery(setCursorIndex());
       clearSelection();
       return;
     }
@@ -208,7 +209,12 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     return cleanedInput && [cleanedInput];
   };
 
-  // TODO - build out for "field" type
+  /**
+   * Gets input type. 
+   *
+   * @param {string} inputHasPhrase
+   * @returns {string} type of input
+   */
   const getModelItemType = input =>
     ["AND", "OR", "NOT"].indexOf(input) !== -1 ? "logic" : "phrase";
 
@@ -284,13 +290,16 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
               <div className="autocomplete__input">
                 {query.items.map(
                   ({ value, id, type }, index) =>
-                    // id !== query.activeId || type !== "text" ? (
                     type !== "text" ? (
                       <Chip
                         type={type}
                         index={index}
                         key={id}
-                        onDelete={() => dispatchQuery(removeItem(id))}
+                        onDelete={() => {
+                          dispatchQuery(removeItem(id))
+                          // TODO - determine where the cursor should be focused to. 
+                          // At the end of the items OR where the item was removed?
+                        }}
                       >
                         {value}
                       </Chip>
