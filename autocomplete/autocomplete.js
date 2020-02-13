@@ -88,7 +88,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     e.nativeEvent.preventDownshiftDefault = true;
     const { items, activeId } = query;
 
-    // If more than one item 
+    // If more than one item
     if (items.length > 1) {
       console.log("updating active item");
       e.preventDefault();
@@ -255,6 +255,8 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    */
   const parseOnKeyUp = ({ inputValue }) => {
     const { items, cursorIndex } = query;
+
+    if (!inputValue) return;
 
     const itemToDispatch = {
       value: inputValue,
