@@ -285,22 +285,21 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
           <div className="autocomplete">
             <div className="autocomplete__controls">
               <div className="autocomplete__input">
-                {query.items.map(
-                  ({ value, id, type }, index) =>
-                    type !== "text" ? (
-                      <Chip
-                        type={type}
-                        index={index}
-                        key={id}
-                        onDelete={() => {
-                          dispatchQuery(removeItem(id));
-                          // TODO - determine where the cursor should be focused to.
-                          // At the end of the items OR where the item was removed?
-                        }}
-                      >
-                        {value}
-                      </Chip>
-                    ) : null // replace with shared input
+                {query.items.map(({ value, id, type }, index) =>
+                  type !== "text" ? (
+                    <Chip
+                      type={type}
+                      index={index}
+                      key={id}
+                      onDelete={() => {
+                        dispatchQuery(removeItem(id));
+                        // TODO - determine where the cursor should be focused to.
+                        // At the end of the items OR where the item was removed?
+                      }}
+                    >
+                      {value}
+                    </Chip>
+                  ) : null
                 )}
                 <input
                   {...getInputProps({
@@ -316,7 +315,23 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                         return;
                       }
 
+                      const { items, cursorIndex } = query;
+
                       switch (e.key) {
+                        case "ArrowLeft":
+                          if (!hasItems(query)) return;
+
+                          const indexToSet =
+                            cursorIndex === 0 ? items.length : cursorIndex - 1;
+                          dispatchQuery(setCursorIndex(indexToSet));
+                          return;
+                        case "ArrowRight":
+                          if (!hasItems(query)) return;
+
+                          const indexToSet =
+                            cursorIndex === items.length ? 0 : cursorIndex + 1;
+                          dispatchQuery(setCursorIndex(indexToSet));
+                          return;
                         case "Backspace":
                           onBackspaceKeyUp(e, { inputValue, setState });
                           return;
