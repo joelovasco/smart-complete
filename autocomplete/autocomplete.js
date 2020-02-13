@@ -155,9 +155,9 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
     const logicRegEx = {
       // "boating AND "
-      [ENDS_WITH]: /^([^"][^\s]*)\s(AND|OR|NOT)\s$/,
+      [ENDS_WITH]: /^([^"].*)\s(AND|OR|NOT)\s$/,
       // "boating AND tourism"
-      [CONTAINS]: /^([^"][^\s]*)\s(AND|OR|NOT)\s(.+)$/
+      [CONTAINS]: /^([^"].*)\s(AND|OR|NOT)\s(.+)$/
     };
 
     if (canStartWithLogicOperator) {
@@ -312,14 +312,12 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                       openMenu();
                     },
                     onKeyUp: e => {
-                      const { items, activeId } = query;
-
                       switch (e.key) {
                         case "Backspace":
                           onBackspaceKeyUp(e, { inputValue, setState });
                           return;
                         case "Enter":
-                          // Item(s) was selected from the dropdown suggestions.
+                          // An item was selected from the dropdown suggestions.
                           // Let handleOnSelect take over.
                           if (highlightedIndex || highlightedIndex === 0) {
                             return;
