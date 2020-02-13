@@ -41,9 +41,9 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
   let cleanUserInput = sanitizeInput(userInput);
 
-  const parsedLogics = cleanUserInput
-    ? logics.filter(logic => logic.value.toLowerCase().includes(cleanUserInput))
-    : [];
+  const parsedLogics = logics.filter(logic =>
+    logic.value.toLowerCase().includes(cleanUserInput)
+  );
 
   const aggregateSuggestions = [...parsedLogics, ...suggestions];
 
@@ -66,7 +66,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const handleOnSelect = (e, { clearSelection }) => {
     if (!e) return;
     const { value, type } = e;
-    const { activeId } = query;
 
     console.log("suggestion selected - ", e);
 
@@ -77,7 +76,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
       })
     );
 
-    dispatchQuery(setActiveId(null));
+    dispatchQuery(setCursorIndex());
     clearSelection();
   };
 
@@ -136,7 +135,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     const lastItemIndex = cursorIndex - 1;
     const { id, value } = items[lastItemIndex];
 
-    dispatchQuery(setCursorIndex(lastItemIndex))
+    dispatchQuery(setCursorIndex(lastItemIndex));
     dispatchQuery(updateItem({ type: "text" }));
 
     downShiftSetState({ inputValue: value });
@@ -210,7 +209,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   };
 
   /**
-   * Gets input type. 
+   * Gets input type.
    *
    * @param {string} inputHasPhrase
    * @returns {string} type of input
@@ -225,10 +224,7 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    * @returns {undefined}
    */
   const setChips = chips => {
-    console.log(chips);
-
     chips.forEach((input, index) => {
-      console.log("CHIPPING")
       const itemContents = {
         value: input,
         type: getModelItemType(input)
@@ -240,6 +236,8 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
         ? dispatchQuery(updateItem(itemContents))
         : dispatchQuery(addItem(itemContents));
     });
+
+    // advance the cursor
     dispatchQuery(setCursorIndex());
   };
 
@@ -296,8 +294,8 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                         index={index}
                         key={id}
                         onDelete={() => {
-                          dispatchQuery(removeItem(id))
-                          // TODO - determine where the cursor should be focused to. 
+                          dispatchQuery(removeItem(id));
+                          // TODO - determine where the cursor should be focused to.
                           // At the end of the items OR where the item was removed?
                         }}
                       >
@@ -364,24 +362,24 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
           </div>
         )}
       </Downshift>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
-      <br/>
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
       <pre>{JSON.stringify(query, 0, 2)}</pre>
     </>
   );
