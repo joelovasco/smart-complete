@@ -85,9 +85,9 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     return item ? item.value : "";
   };
 
-  const onEnterKeyUp = (e, { inputValue, clearSection }) => {
+  const onEnterKeyUp = (e, { inputValue, clearSelection }) => {
     e.nativeEvent.preventDownshiftDefault = true;
-    const { items } = query;
+    const { items, activeId } = query;
 
     // If more than one item and activeId
     // preventDefault
@@ -118,29 +118,24 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    * @param {Event}
    * @param {Object} Downshift's stateAndHelpers
    */
-  const onBackspaceKeyUp = (e, { inputValue, setState }) => {
+  const onBackspaceKeyUp = (e, { inputValue, setState: downShiftSetState }) => {
     const { items, activeId } = query;
-
-    if (!activeId && !inputValue) {
-      e.preventDefault();
-
-      const { id, value } = items[items.length - 1];
-
-      // start chipping away at the existing chip
-      // TODO - Combine with cursorIndex to determine where the in items set this is.
-      dispatchQuery(setActiveId(id));
-      dispatchQuery(updateItem({ type: "text" }));
-
-      setState({ inputValue: value });
+    if (activeId) {
+      inputValue
+        ? dispatchQuery(updateItem({ value: inputValue }))
+        : dispatchQuery(removeItem(activeId));
       return;
     }
 
-    if (!inputValue) {
-      dispatchQuery(removeItem(activeId));
-      return;
-    }
+    // Start chipping away at adjacent chip
+    // TODO - Combine with cursorIndex to determine where the in items set this is.
+    e.preventDefault();
+    const { id, value } = items[items.length - 1];
 
-    dispatchQuery(updateItem({ value: inputValue }));
+    dispatchQuery(setActiveId(id));
+    dispatchQuery(updateItem({ type: "text" }));
+
+    downShiftSetState({ inputValue: value });
   };
 
   /**
@@ -220,13 +215,8 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    * @param {string[]} chips
    * @returns {undefined}
    */
-  // const chipInput = (e, { inputValue, clearSelection }) => {
-  const chipInput = chips => {
-    const { items, activeId } = query;
-
-    const activeIndex = activeId
-      ? items.findIndex(({ id }) => id === activeId)
-      : null;
+  const setChips = chips => {
+    const { activeId } = query;
 
     chips.forEach((input, index) => {
       const itemContents = {
@@ -234,7 +224,9 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
         type: getModelItemType(input)
       };
 
-      if (index === activeIndex) {
+      // If a item has been edited update it
+      // and then add any remaining items to the model
+      if (activeId && index === 0) {
         dispatchQuery(updateItem(itemContents));
       } else {
         dispatchQuery(addItem(itemContents));
@@ -244,7 +236,44 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     dispatchQuery(setActiveId(null));
   };
 
-  // const parseInput = () => {};
+  /**
+   * Compiles input into chipable content
+   *
+   * @param {string} input
+   * @return {string[]|undefined} Chipable content
+   */
+  const getChipItems = input =>
+    parseInputForLogicOperator(input, hasItems(query)) || inputHasPhrase(input);
+
+  /**
+   * Parses input
+   *
+   * @param {object} Dropdown's state and helpers
+   * @return {undefined}
+   */
+  const parseOnKeyUp = ({ inputValue, clearSelection }) => {
+    if (!inputValue) return;
+    const { activeId } = query;
+    const chips = getChipItems(inputValue);
+
+    if (chips) {
+      setChips(chips);
+      clearSelection();
+      return;
+    }
+
+    if (activeId) {
+      dispatchQuery(updateItem({ value: inputValue }));
+      return;
+    }
+
+    dispatchQuery(
+      addActiveItem({
+        value: inputValue,
+        type: "text"
+      })
+    );
+  };
 
   return (
     <>
@@ -293,45 +322,13 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                           // Item(s) was selected from the dropdown suggestions.
                           // Let handleOnSelect take over.
                           if (highlightedIndex || highlightedIndex === 0) {
-                            console.log(
-                              "has highlightedIndex",
-                              highlightedIndex
-                            );
                             return;
                           }
+
                           onEnterKeyUp(e, { inputValue, clearSelection });
                           return;
                         default:
-
-                        // TODO - continue refactoring this into a parser. 
-                          if (!activeId && inputValue) {
-                            dispatchQuery(
-                              addActiveItem({
-                                value: inputValue,
-                                type: "text"
-                              })
-                            );
-                            return;
-                          }
-
-                          const chipsToDispatch =
-                            parseInputForLogicOperator(
-                              inputValue,
-                              hasItems(query)
-                            ) || inputHasPhrase(inputValue);
-
-                          if (chipsToDispatch) {
-                            // chipInput(e, { inputValue, clearSelection });
-                            chipInput(chipsToDispatch);
-                            clearSelection()
-                            return;
-                          }
-
-                          if (activeId) {
-                            dispatchQuery(updateItem({ value: inputValue }));
-                          }
-
-                          return;
+                          parseOnKeyUp({ inputValue, clearSelection });
                       }
                     }
                   })}

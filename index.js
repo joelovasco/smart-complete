@@ -9,7 +9,7 @@ const App = () => (
     <Data>
       <DataContext.Consumer>
         {context => {
-          console.log("context: ", context);
+          // console.log("context: ", context);
           return (
             <Autocomplete
               suggestions={context.data}
