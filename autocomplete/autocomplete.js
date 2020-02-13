@@ -10,10 +10,10 @@ import Chip from "./chip";
 import { subjects } from "../data/subjects";
 import queryReducer, {
   addItem,
-  addActiveItem,
   updateItem,
   removeItem,
   setActiveId,
+  setCursorIndex,
   queryModel,
   hasItems
 } from "../query-model/query-model";
@@ -119,20 +119,23 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    * @param {Object} Downshift's stateAndHelpers
    */
   const onBackspaceKeyUp = (e, { inputValue, setState: downShiftSetState }) => {
-    const { items, activeId } = query;
-    if (activeId) {
+    const { items, cursorIndex } = query;
+
+    if (!hasItems(query)) return;
+
+    if (items[cursorIndex]) {
       inputValue
         ? dispatchQuery(updateItem({ value: inputValue }))
-        : dispatchQuery(removeItem(activeId));
+        : dispatchQuery(removeItem());
       return;
     }
 
     // Start chipping away at adjacent chip
-    // TODO - Combine with cursorIndex to determine where the in items set this is.
     e.preventDefault();
-    const { id, value } = items[items.length - 1];
+    const lastItemIndex = cursorIndex - 1;
+    const { id, value } = items[lastItemIndex];
 
-    dispatchQuery(setActiveId(id));
+    dispatchQuery(setCursorIndex(lastItemIndex))
     dispatchQuery(updateItem({ type: "text" }));
 
     downShiftSetState({ inputValue: value });
@@ -216,24 +219,22 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    * @returns {undefined}
    */
   const setChips = chips => {
-    const { activeId } = query;
+    console.log(chips);
 
     chips.forEach((input, index) => {
+      console.log("CHIPPING")
       const itemContents = {
         value: input,
         type: getModelItemType(input)
       };
 
-      // If an item has been edited, update it,
-      // then add any remaining items to the model
-      if (activeId && index === 0) {
-        dispatchQuery(updateItem(itemContents));
-      } else {
-        dispatchQuery(addItem(itemContents));
-      }
+      // Update the exisiting item.
+      // Add the rest.
+      index === 0
+        ? dispatchQuery(updateItem(itemContents))
+        : dispatchQuery(addItem(itemContents));
     });
-
-    dispatchQuery(setActiveId(null));
+    dispatchQuery(setCursorIndex());
   };
 
   /**
@@ -251,28 +252,17 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    * @param {object} Dropdown's state and helpers
    * @return {undefined}
    */
-  const parseOnKeyUp = ({ inputValue, clearSelection }) => {
-    if (!inputValue) return;
-    const { activeId } = query;
-    const chips = getChipItems(inputValue);
+  const parseOnKeyUp = ({ inputValue }) => {
+    const { items, cursorIndex } = query;
 
-    if (chips) {
-      setChips(chips);
-      clearSelection();
-      return;
-    }
+    const itemToDispatch = {
+      value: inputValue,
+      type: "text"
+    };
 
-    if (activeId) {
-      dispatchQuery(updateItem({ value: inputValue }));
-      return;
-    }
-
-    dispatchQuery(
-      addActiveItem({
-        value: inputValue,
-        type: "text"
-      })
-    );
+    items[cursorIndex]
+      ? dispatchQuery(updateItem(itemToDispatch))
+      : dispatchQuery(addItem(itemToDispatch));
   };
 
   return (
@@ -294,7 +284,8 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
               <div className="autocomplete__input">
                 {query.items.map(
                   ({ value, id, type }, index) =>
-                    id !== query.activeId || type !== "text" ? (
+                    // id !== query.activeId || type !== "text" ? (
+                    type !== "text" ? (
                       <Chip
                         type={type}
                         index={index}
@@ -312,6 +303,13 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                       openMenu();
                     },
                     onKeyUp: e => {
+                      const chips = getChipItems(inputValue);
+                      if (chips) {
+                        setChips(chips);
+                        clearSelection();
+                        return;
+                      }
+
                       switch (e.key) {
                         case "Backspace":
                           onBackspaceKeyUp(e, { inputValue, setState });
@@ -357,6 +355,24 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
           </div>
         )}
       </Downshift>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
+      <br/>
       <pre>{JSON.stringify(query, 0, 2)}</pre>
     </>
   );

@@ -4,31 +4,40 @@ const ADD_ITEM = "ADD_ITEM";
 const UPDATE_ITEM = "UPDATE_ITEM";
 const REMOVE_ITEM = "REMOVE_ITEM";
 const SET_ACTIVE_ID = "SET_ACTIVE_ID";
+const SET_CURSOR_INDEX = "SET_CURSOR_INDEX";
 
 export default function queryReducer(state, action) {
   switch (action.type) {
     case ADD_ITEM:
+      console.log("ADD - ", action);
       return {
         ...state,
         items: [...state.items, { ...action.payload, id: uuid() }]
       };
     case UPDATE_ITEM:
+      console.log("update - ", action);
       return {
         ...state,
-        items: state.items.map(item =>
-          item.id === state.activeId ? { ...item, ...action.payload } : item
+        items: state.items.map((item, index) =>
+          //item.id === state.activeId ? { ...item, ...action.payload } : item
+          index === state.cursorIndex ? { ...item, ...action.payload } : item
         )
       };
     case REMOVE_ITEM:
+      console.log("remove - ", action);
       return {
         ...state,
-        items: state.items.filter(item => item.id !== action.id),
-        activeId: null
+        items: state.items.filter(item => item.id !== action.payload)
       };
     case SET_ACTIVE_ID:
       return {
         ...state,
         activeId: action.id
+      };
+    case SET_CURSOR_INDEX:
+      return {
+        ...state,
+        cursorIndex: action.payload
       };
     default:
       return state;
@@ -38,7 +47,8 @@ export default function queryReducer(state, action) {
 const queryModel = {
   items: [],
   itemsToString: () => "",
-  activeId: null
+  activeId: null,
+  cursorIndex: 0
 };
 
 // action
@@ -47,46 +57,44 @@ const addItem = payload => ({
   payload
 });
 
-const addActiveItem = payload => (dispatch, getState) => {
-  dispatch({
-    type: ADD_ITEM,
-    payload
-  });
-
-  const { items } = getState();
-  const addedItem = items.slice(items.length - 1);
-
-  dispatch({
-    type: SET_ACTIVE_ID,
-    id: addedItem[0].id
-  });
-};
-
 const updateItem = payload => ({
   type: UPDATE_ITEM,
   payload
 });
 
-const removeItem = id => ({
-  type: REMOVE_ITEM,
-  id
-});
+const removeItem = id => (dispatch, getState) => {
+  const { items, cursorIndex } = getState();
+
+  dispatch({
+    type: REMOVE_ITEM,
+    payload: id || items[cursorIndex].id
+  });
+
+  dispatch(setCursorIndex());
+};
 
 const setActiveId = id => ({
   type: SET_ACTIVE_ID,
   id
 });
 
+const setCursorIndex = (index = -1) => (dispatch, getState) => {
+  dispatch({
+    type: SET_CURSOR_INDEX,
+    payload: index >= 0 ? index : getState().items.length
+  });
+};
+
 // selectors
 
-const hasItems = (state) => state.items.length >= 1;
+const hasItems = state => state.items.length >= 1;
 
 export {
   addItem,
-  addActiveItem,
   updateItem,
   removeItem,
   setActiveId,
+  setCursorIndex,
   queryModel,
   hasItems
 };
