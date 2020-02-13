@@ -224,8 +224,8 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
         type: getModelItemType(input)
       };
 
-      // If a item has been edited update it
-      // and then add any remaining items to the model
+      // If an item has been edited, update it,
+      // then add any remaining items to the model
       if (activeId && index === 0) {
         dispatchQuery(updateItem(itemContents));
       } else {
