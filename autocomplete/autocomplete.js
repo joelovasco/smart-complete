@@ -10,11 +10,12 @@ import Chip from "./chip";
 import { subjects } from "../data/subjects";
 import queryReducer, {
   addItem,
-  addActiveItem,
   updateItem,
   removeItem,
   setActiveId,
-  queryModel
+  setCursorIndex,
+  queryModel,
+  hasItems
 } from "../query-model/query-model";
 
 import "./autocomplete.scss";
@@ -40,9 +41,9 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
   let cleanUserInput = sanitizeInput(userInput);
 
-  const parsedLogics = cleanUserInput
-    ? logics.filter(logic => logic.value.toLowerCase().includes(cleanUserInput))
-    : [];
+  const parsedLogics = logics.filter(logic =>
+    logic.value.toLowerCase().includes(cleanUserInput)
+  );
 
   const aggregateSuggestions = [...parsedLogics, ...suggestions];
 
@@ -65,7 +66,6 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
   const handleOnSelect = (e, { clearSelection }) => {
     if (!e) return;
     const { value, type } = e;
-    const { activeId } = query;
 
     console.log("suggestion selected - ", e);
 
@@ -76,12 +76,37 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
       })
     );
 
-    dispatchQuery(setActiveId(null));
+    dispatchQuery(setCursorIndex());
     clearSelection();
   };
 
   const itemToString = item => {
     return item ? item.value : "";
+  };
+
+  const onEnterKeyUp = (e, { inputValue, clearSelection }) => {
+    e.nativeEvent.preventDownshiftDefault = true;
+    const { items, activeId } = query;
+
+    // If more than one item
+    if (items.length > 1) {
+      console.log("updating active item");
+      e.preventDefault();
+      dispatchQuery(
+        updateItem({
+          value: inputValue,
+          type: getModelItemType(inputValue)
+        })
+      );
+      // advance cursor
+      dispatchQuery(setCursorIndex());
+      clearSelection();
+      return;
+    }
+
+    // Else run the search.
+    // TODO - dispatch action?
+    console.log("Running search for - ", items);
   };
 
   /**
@@ -90,28 +115,27 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
    * @param {Event}
    * @param {Object} Downshift's stateAndHelpers
    */
-  const onBackspaceKeyUp = (e, { inputValue, setState }) => {
-    const { items, activeId } = query;
-    const hasChips = items.length > 0;
+  const onBackspaceKeyUp = (e, { inputValue, setState: downShiftSetState }) => {
+    const { items, cursorIndex } = query;
 
-    // If a user has deleted past a chip
-    // remove it from query.items
-    if (activeId && inputValue === "") {
-      dispatchQuery(removeItem(activeId));
+    if (!hasItems(query)) return;
+
+    if (items[cursorIndex]) {
+      inputValue
+        ? dispatchQuery(updateItem({ value: inputValue }))
+        : dispatchQuery(removeItem());
+      return;
     }
 
-    // start chipping away at the existing chip
-    if (hasChips && !activeId && !inputValue) {
-      e.preventDefault();
+    // Start chipping away at adjacent chip
+    e.preventDefault();
+    const lastItemIndex = cursorIndex - 1;
+    const { id, value } = items[lastItemIndex];
 
-      // TODO - build this out to be shared by inputs between chips
-      const { id, value } = items[items.length - 1];
+    dispatchQuery(setCursorIndex(lastItemIndex));
+    dispatchQuery(updateItem({ type: "text" }));
 
-      dispatchQuery(setActiveId(id));
-      dispatchQuery(updateItem({ type: "text" }));
-
-      setState({ inputValue: value });
-    }
+    downShiftSetState({ inputValue: value });
   };
 
   /**
@@ -131,9 +155,9 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
 
     const logicRegEx = {
       // "boating AND "
-      [ENDS_WITH]: /^([^"][^\s]*)\s(AND|OR|NOT)\s$/,
+      [ENDS_WITH]: /^([^"].*)\s(AND|OR|NOT)\s$/,
       // "boating AND tourism"
-      [CONTAINS]: /^([^"][^\s]*)\s(AND|OR|NOT)\s(.+)$/
+      [CONTAINS]: /^([^"].*)\s(AND|OR|NOT)\s(.+)$/
     };
 
     if (canStartWithLogicOperator) {
@@ -181,53 +205,67 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
     return cleanedInput && [cleanedInput];
   };
 
-  // TODO - build out for "field" type
+  /**
+   * Gets input type.
+   *
+   * @param {string} inputHasPhrase
+   * @returns {string} type of input
+   */
   const getModelItemType = input =>
     ["AND", "OR", "NOT"].indexOf(input) !== -1 ? "logic" : "phrase";
 
   /**
    * Determines if input should be chipped.
    *
-   * @param {Event}
-   * @param {Object} Downshift's stateAndHelpers
+   * @param {string[]} chips
+   * @returns {undefined}
    */
-  const chipInput = (e, { inputValue, clearSelection }) => {
-    const { items, activeId } = query;
-    const hasChips = items.length > 0;
+  const setChips = chips => {
+    chips.forEach((input, index) => {
+      const itemContents = {
+        value: input,
+        type: getModelItemType(input)
+      };
 
-    let inputsToDispatch =
-      parseInputForLogicOperator(inputValue, hasChips) ||
-      inputHasPhrase(inputValue);
-
-    if (!inputsToDispatch) return;
-
-    // Update the active item
-    // Shift the contents of inputsToDispatch so that the newest items can be added to the model.
-    if (activeId) {
-      const activeItemValue = inputsToDispatch.slice(0, 1)[0];
-      inputsToDispatch = inputsToDispatch.slice(1);
-
-      dispatchQuery(
-        updateItem({
-          value: activeItemValue,
-          type: getModelItemType(activeItemValue)
-        })
-      );
-      dispatchQuery(setActiveId(null));
-    }
-
-    inputsToDispatch.forEach(input => {
-      if (!input) return;
-
-      dispatchQuery(
-        addItem({
-          value: input,
-          type: getModelItemType(input)
-        })
-      );
+      // Update the exisiting item.
+      // Add the rest.
+      index === 0
+        ? dispatchQuery(updateItem(itemContents))
+        : dispatchQuery(addItem(itemContents));
     });
 
-    clearSelection();
+    // advance the cursor
+    dispatchQuery(setCursorIndex());
+  };
+
+  /**
+   * Compiles input into chipable content
+   *
+   * @param {string} input
+   * @return {string[]|undefined} Chipable content
+   */
+  const getChipItems = input =>
+    parseInputForLogicOperator(input, hasItems(query)) || inputHasPhrase(input);
+
+  /**
+   * Parses input
+   *
+   * @param {object} Dropdown's state and helpers
+   * @return {undefined}
+   */
+  const parseOnKeyUp = ({ inputValue }) => {
+    const { items, cursorIndex } = query;
+
+    if (!inputValue) return;
+
+    const itemToDispatch = {
+      value: inputValue,
+      type: "text"
+    };
+
+    items[cursorIndex]
+      ? dispatchQuery(updateItem(itemToDispatch))
+      : dispatchQuery(addItem(itemToDispatch));
   };
 
   return (
@@ -247,18 +285,21 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
           <div className="autocomplete">
             <div className="autocomplete__controls">
               <div className="autocomplete__input">
-                {query.items.map(
-                  ({ value, id, type }, index) =>
-                    id !== query.activeId || type !== "text" ? (
-                      <Chip
-                        type={type}
-                        index={index}
-                        key={id}
-                        onDelete={() => dispatchQuery(removeItem(id))}
-                      >
-                        {value}
-                      </Chip>
-                    ) : null // replace with shared input
+                {query.items.map(({ value, id, type }, index) =>
+                  type !== "text" ? (
+                    <Chip
+                      type={type}
+                      index={index}
+                      key={id}
+                      onDelete={() => {
+                        dispatchQuery(removeItem(id));
+                        // TODO - determine where the cursor should be focused to.
+                        // At the end of the items OR where the item was removed?
+                      }}
+                    >
+                      {value}
+                    </Chip>
+                  ) : null
                 )}
                 <input
                   {...getInputProps({
@@ -267,67 +308,45 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
                       openMenu();
                     },
                     onKeyUp: e => {
-                      const { items, activeId } = query;
-
-                      if (!activeId && inputValue) {
-                        dispatchQuery(
-                          addActiveItem({
-                            value: inputValue,
-                            type: "text"
-                          })
-                        );
+                      const chips = getChipItems(inputValue);
+                      if (chips) {
+                        setChips(chips);
+                        clearSelection();
+                        return;
                       }
 
-                      if (activeId) {
-                        dispatchQuery(updateItem({ value: inputValue }));
-                      }
+                      const { items, cursorIndex } = query;
 
                       switch (e.key) {
+                        case "ArrowLeft":
+                          if (!hasItems(query)) return;
+
+                          const indexToSet =
+                            cursorIndex === 0 ? items.length : cursorIndex - 1;
+                          dispatchQuery(setCursorIndex(indexToSet));
+                          return;
+                        case "ArrowRight":
+                          if (!hasItems(query)) return;
+
+                          const indexToSet =
+                            cursorIndex === items.length ? 0 : cursorIndex + 1;
+                          dispatchQuery(setCursorIndex(indexToSet));
+                          return;
                         case "Backspace":
                           onBackspaceKeyUp(e, { inputValue, setState });
                           return;
                         case "Enter":
-                          // Item(s) was selected from the dropdown suggestions.
+                          // An item was selected from the dropdown suggestions.
                           // Let handleOnSelect take over.
                           if (highlightedIndex || highlightedIndex === 0) {
-                            console.log(
-                              "has highlightedIndex",
-                              highlightedIndex
-                            );
                             return;
                           }
 
-                          e.nativeEvent.preventDownshiftDefault = true;
-
-                          // If more than one item and activeId
-                          // preventDefault
-                          // update active chip
-                          console.log("editing active item");
-                          if (items.length > 1 && activeId) {
-                            console.log("updating active item");
-                            e.preventDefault();
-                            dispatchQuery(
-                              updateItem({
-                                value: inputValue,
-                                type: getModelItemType(inputValue)
-                              })
-                            );
-                            dispatchQuery(setActiveId(null));
-                            clearSelection();
-                          }
-
-                          // Else run the search.
-                          // TODO - dispatch action?
-                          console.log("Running search for - ", inputValue);
+                          onEnterKeyUp(e, { inputValue, clearSelection });
                           return;
                         default:
-                          chipInput(e, { inputValue, clearSelection });
-                          return;
+                          parseOnKeyUp({ inputValue, clearSelection });
                       }
-                    },
-                    onKeyDown: e => {
-                      const { key } = e;
-                      const { items, activeId } = query;
                     }
                   })}
                 />
@@ -374,6 +393,24 @@ export default function Autocomplete({ suggestions, logics, onInputChange }) {
           </div>
         )}
       </Downshift>
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
+      <br />
       <pre>{JSON.stringify(query, 0, 2)}</pre>
     </>
   );
